@@ -9,16 +9,23 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "d3": "^7.9.0",
+    "gsap": "^3.12.7",
+    "next": "15.2.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "next": "15.2.4"
+    "react-heatmap-grid": "^0.9.1",
+    "react-multi-select-component": "^4.3.4",
+    "react-range": "^1.10.0",
+    "recharts": "^2.15.1"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@tailwindcss/postcss": "^4",
+    "@types/d3": "^7.4.3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4"
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }

@@ -134,7 +134,7 @@ const ChartTogglePage: NextPage = () => {
       >
         Back
       </button>
-      <h1 className="text-2xl font-bold mb-4">
+      <h1 className="text-2xl font-bold mb-4 text-gray-800">
         Chart To Observe 19GA Data Points with time and Area Filter
       </h1>
 
@@ -165,7 +165,7 @@ const ChartTogglePage: NextPage = () => {
 
       <div className="flex space-x-8 mb-4">
         <div className="w-72">
-          <h3 className="text-lg font-semibold mb-2">Select Time Frame</h3>
+          <h3 className="text-lg font-semibold mb-2 text-gray-800">Select Time Frame</h3>
 
           <Range
             step={1}
@@ -198,8 +198,8 @@ const ChartTogglePage: NextPage = () => {
           </p>
         </div>
 
-        <div className="mb-4 w-72">
-          <h3 className="text-lg font-semibold mb-2">Select Areas</h3>
+        <div className="mb-4 w-72 text-gray-800">
+          <h3 className="text-lg font-semibold mb-2 text-gray-800">Select Areas</h3>
           <MultiSelect
             options={ALL_AREAS}
             value={selectedAreas}

@@ -61,6 +61,7 @@ const SimpleHeatmap: React.FC<HeatmapProps> = ({
     return d3.max(transposedData.flat()) ?? 0;
   }, [transposedData]);
 
+  // Recalculate column totals when transposedData changes
   const columnTotals = useMemo(() => {
     if (transposedData.length === 0) return [];
     const numMonths = transposedData[0].length;
@@ -72,6 +73,9 @@ const SimpleHeatmap: React.FC<HeatmapProps> = ({
   const colorScale = d3
     .scaleSequential(d3.interpolateBlues)
     .domain([0, Math.log(maxValue + 1)]);
+
+  // Color scale for each row (city)
+  const rowColorScale = d3.scaleOrdinal(d3.schemeCategory10);
 
   const handleMouseEnter = (
     e: React.MouseEvent,
@@ -89,7 +93,7 @@ const SimpleHeatmap: React.FC<HeatmapProps> = ({
             <b>{yLabels[rowIndex]}</b>
           </div>
           <div>
-            <b>{value}</b>
+            Data points: <b>{value}</b>
           </div>
           <div>{xLabels[colIndex]}</div>
         </div>
@@ -132,28 +136,43 @@ const SimpleHeatmap: React.FC<HeatmapProps> = ({
             );
           })}
 
-          {/* Render heatmap cells */}
+         
           {transposedData.map((row, rowIndex) =>
             row.map((value, colIndex) => {
               const x = xScale(xLabels[colIndex]);
               const y = yScale(yLabels[rowIndex]);
               if (x === undefined || y === undefined) return null;
               const color = colorScale(Math.log(value + 1));
+              const rowColor = rowColorScale(yLabels[rowIndex]); // Get distinct color for each row
+
               return (
-                <rect
-                  key={`${rowIndex}-${colIndex}`}
-                  x={x}
-                  y={y}
-                  width={xScale.bandwidth()}
-                  height={yScale.bandwidth()}
-                  fill={color}
-                  stroke="white"
-                  onMouseEnter={(e) =>
-                    handleMouseEnter(e, rowIndex, colIndex, value)
-                  }
-                  onMouseMove={handleMouseMove}
-                  onMouseLeave={handleMouseLeave}
-                />
+                <g key={`${rowIndex}-${colIndex}`}>
+               
+                  <rect
+                    x={x}
+                    y={y}
+                    width={xScale.bandwidth()}
+                    height={yScale.bandwidth()}
+                    fill={rowColor}
+                    stroke="white"
+                    rx="2"
+                    onMouseEnter={(e) =>
+                      handleMouseEnter(e, rowIndex, colIndex, value)
+                    }
+                    onMouseMove={handleMouseMove}
+                    onMouseLeave={handleMouseLeave}
+                  />
+                  
+                  <text
+                    x={x + xScale.bandwidth() / 2}
+                    y={y + yScale.bandwidth() / 2}
+                    textAnchor="middle"
+                    alignmentBaseline="middle"
+                    className="text-[10px] fill-white font-semibold"
+                  >
+                    {value}
+                  </text>
+                </g>
               );
             })
           )}

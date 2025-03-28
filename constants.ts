@@ -405,7 +405,7 @@ export const ALL_AREAS = [
     {
       name: "Jaipur",
       coordinates: [75.7873, 26.9124],
-      meterInstalled: 900,
+      meterInstalled: 3000,
       meterCommissioned: 900,
       energyConsumption: 190,
       energyConsumptionINR: 9500,

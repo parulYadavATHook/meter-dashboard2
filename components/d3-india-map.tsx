@@ -49,13 +49,13 @@ const IndiaMapVisualization: React.FC = () => {
     const pathGenerator = d3.geoPath().projection(projection);
 
     g.append("g")
-    .selectAll("path")
-    .data(geoData.features as GeoJSON.Feature<GeoJSON.Geometry, any>[])  // Explicit cast
-    .enter()
-    .append("path")
-    .attr("d", pathGenerator)
-    .attr("fill", "#e0e0e0")
-    .attr("stroke", "#333");
+      .selectAll("path")
+      .data(geoData.features as GeoJSON.Feature<GeoJSON.Geometry, any>[]) // Explicit cast
+      .enter()
+      .append("path")
+      .attr("d", pathGenerator)
+      .attr("fill", "#e0e0e0")
+      .attr("stroke", "#333");
 
     if (mode === "meter") {
       const meterRadiusScale = d3
@@ -126,9 +126,10 @@ const IndiaMapVisualization: React.FC = () => {
 
         group
           .append("text")
-          .attr("y", radius + 18)
+          .attr("y", radius + 14)
           .attr("text-anchor", "middle")
-          .attr("font-size", "10px")
+          .attr("font-size", "12px")
+          .attr("font-weight", "500")
           .text(city.name);
 
         group
@@ -136,10 +137,10 @@ const IndiaMapVisualization: React.FC = () => {
             meterTooltip.transition().duration(300).style("opacity", 0.95);
             meterTooltip
               .html(
-                `<strong>${city.name}</strong><br/>` +
-                  `Installed: <strong>${city.meterInstalled}</strong><br/>` +
-                  `Commissioned: <strong>${city.meterCommissioned}</strong><br/>` +
-                  `Pending: <strong>${pending}</strong>`
+                `<strong style="color: black;">${city.name}</strong><br/>` +
+                  `Installed: <strong style="color: black;">${city.meterInstalled}</strong><br/>` +
+                  `Commissioned: <strong style="color: black;">${city.meterCommissioned}</strong><br/>` +
+                  `Pending: <strong style="color: black;">${pending}</strong>`
               )
               .style("left", event.pageX + 10 + "px")
               .style("top", event.pageY - 28 + "px");
@@ -170,6 +171,7 @@ const IndiaMapVisualization: React.FC = () => {
         .style("padding", "10px")
         .style("pointer-events", "none")
         .style("font-size", "12px")
+        .style("color", "black")
         .style("box-shadow", "2px 2px 6px rgba(0,0,0,0.2)")
         .style("opacity", 0);
 
@@ -222,7 +224,7 @@ const IndiaMapVisualization: React.FC = () => {
             energyUnit === "SCM" ? d.energyConsumption : d.energyConsumptionINR;
           energyTooltip
             .html(
-              `<strong>${d.name}</strong><br/><strong>${value}</strong> ${energyUnit}`
+              `<strong style="color: black;">${d.name}</strong><br/><span style="color: gray;">Daily Consumption : </span><br/><strong style="color: black;">${value}</strong> ${energyUnit}`
             )
             .style("left", event.pageX + 10 + "px")
             .style("top", event.pageY - 28 + "px");
@@ -270,7 +272,8 @@ const IndiaMapVisualization: React.FC = () => {
           );
         })
         .attr("text-anchor", "middle")
-        .attr("font-size", "10px")
+        .attr("font-size", "12px")
+        .attr("font-weight", "500")
         .text((d) => d.name);
     }
 
@@ -288,7 +291,7 @@ const IndiaMapVisualization: React.FC = () => {
         Back
       </button>
 
-      <h1 className="text-2xl font-bold mb-4 text-center sm:text-left">
+      <h1 className="text-2xl font-bold mb-4 text-center sm:text-left text-black">
         India Map Visualization
       </h1>
 
@@ -316,7 +319,7 @@ const IndiaMapVisualization: React.FC = () => {
 
         {mode === "energy" && (
           <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start mt-2 sm:mt-0">
-            <span className="font-semibold">Unit:</span>
+            <span className="font-semibold text-gray-800">Unit:</span>
             <button
               onClick={() => setEnergyUnit("SCM")}
               className={`px-3 py-1 rounded shadow ${

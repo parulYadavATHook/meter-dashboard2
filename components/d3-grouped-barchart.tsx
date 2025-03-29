@@ -1,16 +1,18 @@
-import React, { useEffect, useRef, useMemo, useState } from "react";
+import React, { JSX, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
 
 interface GroupedBarChartProps {
-  xLabels: string[];
-  yLabels: string[];
-  data: number[][];
+  xLabels: string[]; // Array of months (e.g., ["Jan", "Feb", "Mar", ...])
+  yLabels: string[]; // Array of areas (e.g., ["Area 1", "Area 2", ..., "Area 19"])
+  data: number[][]; // 2D array with data points (19 areas * 12 months)
   width?: number;
   height?: number;
 }
-interface BarData {
-  label: string;
-  value: number;
+
+interface TooltipState {
+  x: number;
+  y: number;
+  content: JSX.Element;
 }
 
 const GroupedBarChart: React.FC<GroupedBarChartProps> = ({
@@ -18,149 +20,180 @@ const GroupedBarChart: React.FC<GroupedBarChartProps> = ({
   yLabels,
   data,
   width = 800,
-  height = 500,
+  height = 900,
 }) => {
-  const svgRef = useRef<SVGSVGElement>(null);
-  const [tooltip, setTooltip] = useState<{
-    content: string;
-    x: number;
-    y: number;
-  } | null>(null);
-
-  const margin = { top: 40, right: 20, bottom: 60, left: 60 };
+  const margin = { top: 50, right: 20, bottom: 180, left: 50 };
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
-  const maxValue = useMemo(() => {
-    let max = 0;
-    data.forEach((row) =>
-      row.forEach((val) => {
-        if (val > max) max = val;
-      })
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [tooltip, setTooltip] = useState<TooltipState | null>(null);
+  const [highlightedArea, setHighlightedArea] = useState<string | null>(yLabels[0]); // Default to first area selected
+
+  const transposedData = useMemo(() => {
+    if (data.length === 0) return [];
+    const numMonths = data.length; // 12
+    const numAreas = data[0].length; // 19
+    const result: number[][] = Array.from(
+      { length: numAreas },
+      () => new Array(numMonths)
     );
-    return max;
+    for (let m = 0; m < numMonths; m++) {
+      for (let a = 0; a < numAreas; a++) {
+        result[a][m] = data[m][a];
+      }
+    }
+    return result;
   }, [data]);
 
   const xScale = d3
     .scaleBand<string>()
     .domain(xLabels)
     .range([0, innerWidth])
-    .padding(0.2);
-
-  const xSubScale = d3
-    .scaleBand<string>()
-    .domain(yLabels)
-    .range([0, xScale.bandwidth()])
-    .padding(0.2);
+    .padding(0.1);
 
   const yScale = d3
     .scaleLinear()
-    .domain([0, maxValue])
+    .domain([0, d3.max(transposedData.flat()) ?? 0])
     .nice()
     .range([innerHeight, 0]);
 
-  const pastelColors = d3
-    .range(yLabels.length)
-    .map((i) => d3.hsl((360 / yLabels.length) * i, 1, 0.6).toString());
-  const colorScale = d3
-    .scaleOrdinal<string>()
-    .domain(yLabels)
-    .range(pastelColors);
+  const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
 
-  useEffect(() => {
-    d3.select(svgRef.current).selectAll("*").remove();
+  const handleMouseEnter = (
+    e: React.MouseEvent,
+    rowIndex: number,
+    colIndex: number,
+    value: number
+  ) => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const content = (
+        <div>
+          <div>
+            <b>{yLabels[rowIndex]}</b>
+          </div>
+          <div>
+            Data points: <b>{value}</b>
+          </div>
+          <div>{xLabels[colIndex]}</div>
+        </div>
+      );
+      setTooltip({ x, y, content });
+    }
+  };
 
-    const svg = d3
-      .select(svgRef.current)
-      .attr("width", width)
-      .attr("height", height);
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      setTooltip((prev) => (prev ? { ...prev, x, y } : null));
+    }
+  };
 
-    const g = svg
-      .append("g")
-      .attr("transform", `translate(${margin.left}, ${margin.top})`);
+  const handleMouseLeave = () => {
+    setTooltip(null);
+  };
 
-    const yAxisGrid = d3
-      .axisLeft(yScale)
-      .tickSize(-innerWidth)
-      .tickFormat(() => "");
-
-    g.append("g")
-      .attr("class", "grid")
-      .call(yAxisGrid)
-      .selectAll("line")
-      .attr("stroke", "rgba(0, 0, 0, 0.1)")
-      .attr("stroke-dasharray", "3,3");
-
-    const groups = g
-      .selectAll("g.group")
-      .data(data)
-      .enter()
-      .append("g")
-      .attr("class", "group")
-      .attr("transform", (_, i) => `translate(${xScale(xLabels[i])}, 0)`);
-
-    const bars = groups
-      .selectAll("rect")
-      .data((d: any, i) => yLabels.map((label, j) => ({ label, value: d[j] })))
-      .enter()
-      .append("rect")
-      .attr("x", (d) => xSubScale(d.label)!)
-      .attr("y", (d) => yScale(d.value))
-      .attr("width", xSubScale.bandwidth())
-      .attr("height", (d) => innerHeight - yScale(d.value))
-      .attr("fill", (d) => colorScale(d.label) as string)
-      .attr("stroke", "white")
-      .attr("stroke-width", 1)
-      .on("mouseover", function (event, d: BarData) {
-        d3.select(this)
-          .transition()
-          .duration(200)
-          .attr("fill", "black")
-          .attr("opacity", 1);
-        setTooltip({
-          content: `${d.label}: ${d.value}`,
-          x: event.pageX,
-          y: event.pageY,
-        });
-      })
-      .on("mouseout", function (event, d: any) {
-        d3.select(this)
-          .transition()
-          .duration(200)
-
-          .attr("opacity", 1);
-        setTooltip(null);
-      });
-
-    const xAxis = d3.axisBottom(xScale);
-    g.append("g")
-      .attr("transform", `translate(0, ${innerHeight})`)
-      .call(xAxis)
-      .selectAll("text")
-      .attr("transform", "rotate(-45)")
-      .style("text-anchor", "end")
-      .style("font-size", "10px");
-
-    const yAxis = d3.axisLeft(yScale).ticks(5);
-    g.append("g").call(yAxis).selectAll("text").style("font-size", "10px");
-  }, [
-    data,
-    xLabels,
-    yLabels,
-    width,
-    height,
-    innerWidth,
-    innerHeight,
-    xScale,
-    xSubScale,
-    yScale,
-    colorScale,
-  ]);
+  const toggleHighlight = (areaName: string) => {
+    if (highlightedArea === areaName) {
+      setHighlightedArea(null); // Reset highlight if the same area is clicked
+    } else {
+      setHighlightedArea(areaName);
+    }
+  };
 
   return (
-    <div>
-      <svg ref={svgRef} className="shadow rounded bg-white" />
+    <div ref={containerRef} style={{ position: "relative", width, height }}>
+      <svg width={width} height={height} className="bg-white shadow rounded">
+        <g transform={`translate(${margin.left}, ${margin.top})`}>
+          {/* Render bars for each area grouped by month */}
+          {transposedData.map((row, rowIndex) =>
+            row.map((value, colIndex) => {
+              const x = xScale(xLabels[colIndex]) ?? 0;
+              const y = yScale(value);
+              const barWidth = xScale.bandwidth() / yLabels.length;
 
+              // Highlight the selected area
+              const isHighlighted = highlightedArea === yLabels[rowIndex];
+              const color = isHighlighted ? "black" : colorScale(yLabels[rowIndex]);
+              const opacity = isHighlighted ? 1 : 0.3; // Fade other bars
+
+              return (
+                <g key={`${rowIndex}-${colIndex}`} className="group">
+                  <rect
+                    x={x + rowIndex * barWidth}
+                    y={y}
+                    width={barWidth}
+                    height={innerHeight - y}
+                    fill={color}
+                    opacity={opacity} // Apply fading effect
+                    onMouseEnter={(e) =>
+                      handleMouseEnter(e, rowIndex, colIndex, value)
+                    }
+                    onMouseMove={handleMouseMove}
+                    onMouseLeave={handleMouseLeave}
+                  />
+                  {isHighlighted && (
+                    <text
+                      x={x + rowIndex * barWidth + barWidth / 2}
+                      y={y - 8} // Adjusted to position above the bar
+                      textAnchor="middle"
+                      className="text-[12px] fill-black font-semibold"
+                    >
+                      {value}
+                    </text>
+                  )}
+                </g>
+              );
+            })
+          )}
+
+          {/* X-axis labels */}
+          {xLabels.map((label, index) => {
+            const x = xScale(label);
+            return (
+              <text
+                key={`x-${index}`}
+                x={x! + xScale.bandwidth() / 2}
+                y={innerHeight + 20}
+                textAnchor="middle"
+                className="text-xs fill-gray-700"
+              >
+                {label}
+              </text>
+            );
+          })}
+
+          {/* Y-axis ticks */}
+          <g className="axis-y">
+            {yScale.ticks().map((tick, index) => (
+              <g key={`y-${index}`} transform={`translate(0, ${yScale(tick)})`}>
+                <line
+                  x1={0}
+                  x2={innerWidth}
+                  stroke="gray"
+                  strokeWidth={0.5}
+                />
+                <text
+                  x={-10}
+                  y={0}
+                  textAnchor="end"
+                  alignmentBaseline="middle"
+                  className="text-xs fill-gray-700"
+                >
+                  {tick}
+                </text>
+              </g>
+            ))}
+          </g>
+        </g>
+      </svg>
+
+      {/* Tooltip */}
       {tooltip && (
         <div
           style={{
@@ -169,7 +202,7 @@ const GroupedBarChart: React.FC<GroupedBarChartProps> = ({
             top: tooltip.y + 10,
             backgroundColor: "rgba(0,0,0,0.7)",
             color: "white",
-            padding: "8px",
+            padding: "5px",
             borderRadius: "4px",
             pointerEvents: "none",
             fontSize: "12px",
@@ -179,6 +212,43 @@ const GroupedBarChart: React.FC<GroupedBarChartProps> = ({
           {tooltip.content}
         </div>
       )}
+
+      {/* Legends Below the Graph */}
+      <div
+        style={{
+          position: "sticky",
+          bottom: 0,
+          backgroundColor: "white",
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "10px",
+          padding: "10px 0",
+          boxShadow: "0 -2px 5px rgba(0,0,0,0.1)",
+        }}
+      >
+        {yLabels.map((area, index) => {
+          const isActive = highlightedArea === area;
+          return (
+            <button
+              key={area}
+              onClick={() => toggleHighlight(area)}
+              className={`flex items-center space-x-2 p-2 rounded-lg text-xs border border-blue-600 ${
+                isActive ? "bg-blue-500 text-white" : "bg-gray-100"
+              }`}
+              style={{ width: "100px", minWidth: "100px" }}
+            >
+              <div
+                style={{
+                  width: "15px",
+                  height: "15px",
+                  backgroundColor: colorScale(area),
+                }}
+              ></div>
+              <span>{area}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 };

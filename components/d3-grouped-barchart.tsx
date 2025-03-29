@@ -22,7 +22,7 @@ const GroupedBarChart: React.FC<GroupedBarChartProps> = ({
   width = 800,
   height = 900,
 }) => {
-  const margin = { top: 50, right: 20, bottom: 180, left: 50 };
+  const margin = { top: 50, right: 20, bottom: 160, left: 50 };
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
@@ -30,21 +30,31 @@ const GroupedBarChart: React.FC<GroupedBarChartProps> = ({
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
   const [highlightedArea, setHighlightedArea] = useState<string | null>(yLabels[0]); // Default to first area selected
 
+  // Filtering data based on xLabels
+  const filteredData = useMemo(() => {
+    const monthIndices = xLabels.map((label) => {
+      const index = data.findIndex((_, idx) => idx === xLabels.indexOf(label));
+      return index;
+    });
+
+    return monthIndices.map((index) => data[index]);
+  }, [xLabels, data]);
+
   const transposedData = useMemo(() => {
-    if (data.length === 0) return [];
-    const numMonths = data.length; // 12
-    const numAreas = data[0].length; // 19
+    if (filteredData.length === 0) return [];
+    const numMonths = filteredData.length; // Based on filtered data length
+    const numAreas = filteredData[0].length; // 19
     const result: number[][] = Array.from(
       { length: numAreas },
       () => new Array(numMonths)
     );
     for (let m = 0; m < numMonths; m++) {
       for (let a = 0; a < numAreas; a++) {
-        result[a][m] = data[m][a];
+        result[a][m] = filteredData[m][a];
       }
     }
     return result;
-  }, [data]);
+  }, [filteredData]);
 
   const xScale = d3
     .scaleBand<string>()
@@ -222,7 +232,7 @@ const GroupedBarChart: React.FC<GroupedBarChartProps> = ({
           display: "flex",
           flexWrap: "wrap",
           gap: "10px",
-          padding: "10px 0",
+          padding: "10px 10px",
           boxShadow: "0 -2px 5px rgba(0,0,0,0.1)",
         }}
       >
@@ -232,7 +242,7 @@ const GroupedBarChart: React.FC<GroupedBarChartProps> = ({
             <button
               key={area}
               onClick={() => toggleHighlight(area)}
-              className={`flex items-center space-x-2 p-2 rounded-lg text-xs border border-blue-600 ${
+              className={`flex items-center space-x-2 px-2 py-1 rounded-lg text-xs cursor-pointer border border-blue-600 ${
                 isActive ? "bg-blue-500 text-white" : "bg-gray-100"
               }`}
               style={{ width: "100px", minWidth: "100px" }}

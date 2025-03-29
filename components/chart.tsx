@@ -107,7 +107,8 @@ const ChartTogglePage: NextPage = () => {
   const maxLog = useMemo(() => Math.max(...logMatrix.flat()), [logMatrix]);
 
   const handleSliderChange = (values: number[]) => {
-    setRange([values[0], values[1]]);
+    // setRange([values[0], values[1]]);
+    setRange([range[0], values[1]]);
   };
   const aggregatedData = selectedAreaValues.map((areaKey) => {
     const total = filteredData.reduce(
@@ -144,8 +145,8 @@ const ChartTogglePage: NextPage = () => {
           disabled={chartType === "heatmap"}
           className={`mr-2 px-4 py-2 rounded shadow ${
             chartType === "heatmap"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-800"
+              ? "bg-blue-500 text-white"
+              : "bg-white text-gray-800"
           }`}
         >
           Heat Map
@@ -155,48 +156,55 @@ const ChartTogglePage: NextPage = () => {
           disabled={chartType === "groupedbar"}
           className={`mr-2 px-4 py-2 rounded shadow ${
             chartType === "groupedbar"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-800"
+              ? "bg-blue-500 text-white"
+              : "bg-white text-gray-800"
           }`}
         >
           Grouped Bar Chart
         </button>
       </div>
 
-      <div className="flex space-x-8 mb-4">
+      {/* <div className="flex space-x-8 mb-4 bg-transparent rounded-2xl p-2 px-4"> */}
+      <div className="flex space-x-8 mb-4 bg-gradient-to-r from-blue-300 to-white-400 bg-opacity-50 rounded-2xl p-2 px-4">
         <div className="w-72">
-          <h3 className="text-lg font-semibold mb-2 text-gray-800">Select Time Frame</h3>
+      <h3 className="text-lg font-semibold mb-2 text-gray-800">Select Time Frame</h3>
 
-          <Range
-            step={1}
-            min={0}
-            max={11}
-            values={range}
-            onChange={handleSliderChange}
-            renderTrack={({ props, children }) => (
-              <div
-                {...props}
-                className="relative h-2 bg-gray-300 my-4 rounded-lg"
-              >
-                {children}
-              </div>
-            )}
-            renderThumb={({ props }) => {
-              const { key, ...rest } = props;
-              return (
-                <div
-                  key={key}
-                  {...rest}
-                  className="h-5 w-5 bg-gray-100 rounded-full border-2 border-white cursor-pointer"
-                />
-              );
-            }}
-          />
-          <p className="text-sm text-gray-700">
-            Showing data for Last{" "}
-            <span className="font-medium">{`${range[1] + 1} Months`}</span>
-          </p>
-        </div>
+      <Range
+        step={1}
+        min={0}
+        max={11}
+        values={range}
+        onChange={handleSliderChange}
+        renderTrack={({ props, children }) => (
+          <div
+            {...props}
+            className="relative h-2 bg-white my-4 rounded-lg" // White background for the track
+          >
+            <div
+              className="absolute top-0 left-0 h-2 bg-blue-500 rounded-lg"
+              style={{
+                width: `${((range[1] / 11) * 100)}%`, // Blue strip for the selected range
+              }}
+            ></div>
+            {children}
+          </div>
+        )}
+        renderThumb={({ props }) => {
+          const { key, ...rest } = props;
+          return (
+            <div
+              key={key}
+              {...rest}
+              className={`h-5 w-5 bg-gray-100 rounded-full border-2 border-blue-500 cursor-pointer ${range[0] === range[1] ? "cursor-not-allowed" : ""}`}
+            />
+          );
+        }}
+      />
+      <p className="text-sm text-gray-700">
+        Showing data for Last{" "}
+        <span className="font-medium">{`${range[1] + 1} Months`}</span>
+      </p>
+    </div>
 
         <div className="mb-4 w-72 text-gray-800">
           <h3 className="text-lg font-semibold mb-2 text-gray-800">Select Areas</h3>

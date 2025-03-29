@@ -300,8 +300,8 @@ const IndiaMapVisualization: React.FC = () => {
           onClick={() => setMode("meter")}
           className={`px-4 py-2 rounded shadow ${
             mode === "meter"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-800"
+              ? "bg-blue-500 text-white"
+              : "bg-white text-gray-800"
           }`}
         >
           Installed & Commissioned Meters
@@ -310,8 +310,8 @@ const IndiaMapVisualization: React.FC = () => {
           onClick={() => setMode("energy")}
           className={`px-4 py-2 rounded shadow ${
             mode === "energy"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-800"
+              ? "bg-blue-500 text-white"
+              : "bg-white text-gray-800"
           }`}
         >
           Avg. Daily Consumption
@@ -322,20 +322,20 @@ const IndiaMapVisualization: React.FC = () => {
             <span className="font-semibold text-gray-800">Unit:</span>
             <button
               onClick={() => setEnergyUnit("SCM")}
-              className={`px-3 py-1 rounded shadow ${
+              className={`px-4 py-1 rounded shadow ${
                 energyUnit === "SCM"
-                  ? "bg-green-600 text-white"
-                  : "bg-gray-200 text-gray-800"
+                  ? "bg-green-400 text-white"
+                  : "bg-white text-gray-800"
               }`}
             >
               SCM
             </button>
             <button
               onClick={() => setEnergyUnit("INR")}
-              className={`px-3 py-1 rounded shadow ${
+              className={`px-4 py-1 rounded shadow ${
                 energyUnit === "INR"
-                  ? "bg-green-600 text-white"
-                  : "bg-gray-200 text-gray-800"
+                  ? "bg-green-400 text-white"
+                  : "bg-white text-gray-800"
               }`}
             >
               INR

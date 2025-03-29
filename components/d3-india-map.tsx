@@ -54,8 +54,9 @@ const IndiaMapVisualization: React.FC = () => {
       .enter()
       .append("path")
       .attr("d", pathGenerator)
-      .attr("fill", "#e0e0e0")
-      .attr("stroke", "#333");
+      .attr("fill", "#fff")
+      .attr("stroke", "#37B7C3");
+      // .attr("stroke", "#FFDC7F");
 
     if (mode === "meter") {
       const meterRadiusScale = d3
